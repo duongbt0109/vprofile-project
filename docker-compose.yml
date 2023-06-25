@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  #build image named "vprodb" using docker file in directory ./Docker-files/db/Dockerfile
+  vprodb:
+    build: 
+      context: ./Docker-files/db
+
+    #push image to dockerhub repository
+    image: duongbt0109/vprofiledb
+    container_name: vprodb
+
+    #export port 3306 on container to 3306 on local
+    ports:
+      - "3306:3306"
+
+    #mount directory from container: /var/lib/mysql to directory in local: vprodbdata
+    volumes:
+      - vprodbdata:/var/lib/mysql
+    
+    #in the db Dockerfile, there is MYSQL_ROOT_PASSWORD value
+    #but the value will be replaced by value below in docker-compose.yml file
+    #because docker-compose file is higher precedence than Dockerfile
+    environment:
+      - MYSQL_ROOT_PASSWORD=vprodbpass
+
+###########################################################################################
+  #build image named "vproapp" using docker file in directory ./Docker-files/db/Dockerfile
+  vproapp:
+    build: 
+      context: ./Docker-files/app
+
+    #push image to dockerhub repository
+    image: duongbt0109/vprofileapp
+    container_name: vproapp
+
+    #export port 8080 on container to 8080 on local
+    ports:
+      - "8080:8080"    
+
+  ###########################################################################################
+  #build image named "vproweb" using docker file in directory ./Docker-files/web/Dockerfile
+  vproweb:
+    build: 
+      context: ./Docker-files/web
+
+    #push image to dockerhub repository
+    image: duongbt0109/vprofileweb
+    container_name: vproweb
+
+    #export port 80 on container to 80 on local
+    ports:
+      - "80:80" 
+
+  ###########################################################################################
+  #build image "vprocache01" using memcached base image
+  vprocache01:
+    image: memcached
+    ports:
+      - "11211:11211"
+
+  ###########################################################################################
+  #build image "vpromq01" using rabbitmq base image
+  vpromq01:
+    image: rabbitmq
+    ports:
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER = guest
+      - RABBITMQ_DEFAULT_PASS = guest
+
+##############################################################################################
+#create volume to use in image vprodb
+volumes:
+  vprodbdata: {}
